@@ -23,12 +23,18 @@ pub(crate) struct Hand {
     pub(crate) bit: u32,
 }
 
-pub(crate) fn parse_input() -> Vec<Vec<Hand>> {
+pub(crate) fn parse_input(part_one: bool) -> Vec<Vec<Hand>> {
     let input = read_input();
     let mut type_vec: Vec<Vec<Hand>> = vec![vec![]; 7];
-    let cards = vec![
-        '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A',
-    ];
+    let cards = if part_one {
+        vec![
+            '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A',
+        ]
+    } else {
+        vec![
+            'J', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'Q', 'K', 'A',
+        ]
+    };
     for hand_line in input {
         let hand_info = hand_line
             .split(" ")
@@ -36,7 +42,11 @@ pub(crate) fn parse_input() -> Vec<Vec<Hand>> {
             .collect::<Vec<String>>();
         let hand_cards = &hand_info[0];
         let bit = hand_info[1].parse::<u32>();
-        let hand_type = get_hand_type(hand_cards);
+        let hand_type = if part_one {
+            get_hand_type_one(hand_cards)
+        } else {
+            get_hand_type_two(hand_cards)
+        };
         let hand = Hand {
             cards: hand_cards.to_string(),
             hand_type,
@@ -89,13 +99,70 @@ fn read_input() -> Vec<String> {
     let reader = BufReader::new(file);
     reader.lines().map(|l| l.unwrap()).collect()
 }
-fn get_hand_type(hand_cards: &str) -> HandType {
+fn get_hand_type_one(hand_cards: &str) -> HandType {
     let mut counter: HashMap<char, u32> = HashMap::new();
     for c in hand_cards.chars() {
         let count = counter.entry(c).or_insert(0);
         *count += 1;
     }
-    return if counter.len() == 5 {
+    return set_hand_type(counter);
+}
+
+fn get_hand_type_two(hand_cards: &str) -> HandType {
+    let mut counter: HashMap<char, u32> = HashMap::new();
+    for c in hand_cards.chars() {
+        let count = counter.entry(c).or_insert(0);
+        *count += 1;
+    }
+    let cards = vec![
+        'J', '2', '3', '4', '5', '6', '7', '8', '9', 'T', 'Q', 'K', 'A',
+    ];
+    if hand_cards.contains("J") {
+        let mut max_value : u32 = 1;
+        for (key, value) in counter.iter() {
+            if key != &'J' && *value >= max_value {
+                max_value = *value;
+            }
+        }
+
+        let keys_max: Vec<_> = counter
+            .iter()
+            .filter_map(|(key, &value)| {
+                if key != &'J' && value == max_value {
+                    Some(*key)
+                } else {
+                    None
+                }
+            })
+            .collect();
+        let j_val = *counter.get(&'J').unwrap();
+        if keys_max.len() == 1 {
+            counter.entry(*keys_max.get(0).unwrap()).and_modify(|x| {
+                *x += j_val;
+            });
+        }
+        else{
+            let mut strongest_card = 'J';
+            let mut strongest_card_index: i32 = 0;
+            for c in keys_max{
+                if cards.iter().position(|x| x == &c).unwrap() as i32 > strongest_card_index {
+                    strongest_card = c;
+                    strongest_card_index = cards.iter().position(|x| x == &c).unwrap() as i32;
+                }
+            }
+            counter.insert(
+                strongest_card,
+                j_val + counter.get(&strongest_card).unwrap(),
+            );
+        }
+        counter.remove(&'J');
+
+    }
+    return set_hand_type(counter);
+}
+
+fn set_hand_type(counter: HashMap<char, u32>) -> HandType {
+    if counter.len() == 5 {
         HandType::HighCard
     } else if counter.len() == 4 {
         HandType::OnePair
@@ -125,7 +192,7 @@ fn get_hand_type(hand_cards: &str) -> HandType {
         }
     } else {
         HandType::FiveOfAKind
-    };
+    }
 }
 #[cfg(test)]
 mod tests {
@@ -133,7 +200,7 @@ mod tests {
 
     #[test]
     fn test_parse_input() {
-        let type_vec = parse_input();
+        let type_vec = parse_input(false);
         assert_eq!(type_vec.len(), 7);
         for (i, v) in type_vec.iter().enumerate() {
             if i == 0 {
