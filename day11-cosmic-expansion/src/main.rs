@@ -28,8 +28,8 @@ fn main() {
     }
     println!("Part one: {}", sum);
 }
-// No need to add new rows or columns to the input due to the expansion and this will be obvious when solving part two in which the expansion is 1 million times larger.
-// Alternatively, we could just add the indices of new rows and columns to count them in part two.
+// No need to add new rows or columns to the input due to the expansion and this will be obvious when solving part two in which the expansion is 1 million times larger (very large space needed).
+// Alternatively, we could just add the indices of rows and columns that should be expanded (empty) to count them directly.
 fn expand(input: &Vec<Vec<char>>) -> (Vec<usize>, Vec<usize>) {
     let mut expanded_rows_indices: Vec<usize> = Vec::new();
     let mut expanded_cols_indices: Vec<usize> = Vec::new();
