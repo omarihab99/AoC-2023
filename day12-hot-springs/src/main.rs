@@ -1,51 +1,54 @@
 mod helper;
-use regex::Regex;
+use std::collections::HashMap;
 fn main() {
     let input = helper::read_input();
     let mut valid_strings = 0;
-    for line in input {
-        let string_part = line.0;
-        let number_part = line.1;
-        let mut regex_pattern = String::from(r"^\.*");
-        for number in &number_part {
-            regex_pattern.push_str(&format!("#{{{}}}", number));
-            regex_pattern.push_str(r"\.+");
-        }
-        regex_pattern.pop();
-        regex_pattern.pop();
-        regex_pattern.push_str(r".*$");
-        let re = Regex::new(&regex_pattern).unwrap();
-        backtrack(
-            &mut string_part.clone(),
-            &number_part,
-            &mut valid_strings,
-            0,
-            &re,
-        );
+    for mut line in input {
+        line.0.push('?');
+        let mut string_part= line.0.repeat(5);
+        string_part.pop();
+        let number_part = line.1.repeat(5);
+        let mut memo: HashMap<(usize, usize, usize), u64> = HashMap::new();
+        valid_strings += backtrack(&mut string_part.clone(), &number_part, (0, 0, 0), &mut memo);
     }
     println!("Part 1: {}", valid_strings);
 }
 fn backtrack(
     springs: &mut Vec<char>,
-    numbers: &Vec<i32>,
-    count: &mut i32,
-    index: usize,
-    re: &Regex,
-) {
-    if index == springs.len() && !springs.contains(&'?') {
-        if re.is_match(springs.iter().collect::<String>().as_str()) {
-            *count += 1;
-        }
-        return;
+    lengths: &Vec<usize>,
+    state: (usize, usize, usize),
+    memo: &mut HashMap<(usize, usize, usize), u64>,
+) -> u64 {
+    let (pos, grp, len) = state;
+    let hash = (pos, grp, len);
+
+    if let Some(&result) = memo.get(&hash) {
+        return result;
     }
-    let char = springs[index];
-    if char == '?' {
-        for replace in ['#', '.'].iter() {
-            springs[index] = *replace;
-            backtrack(springs, numbers, count, index + 1, re);
-            springs[index] = '?';
+
+    if pos == springs.len() {
+        if len != 0 && len != lengths[grp] {
+            return 0;
         }
-    } else {
-        backtrack(springs, numbers, count, index + 1, re);
+        return if grp + (grp < lengths.len() && len == lengths[grp]) as usize == lengths.len() {
+            1
+        } else {
+            0
+        };
     }
+    let mut n = 0;
+    let chr = springs[pos];
+    if chr != '.' && grp < lengths.len() && len < lengths[grp] {
+        n += backtrack(springs, lengths, (pos + 1, grp, len + 1), memo);
+    }
+    if chr != '#' && (len == 0 ||len == lengths[grp]) {
+        n += backtrack(
+            springs,
+            lengths,
+            (pos + 1, grp + (grp < lengths.len() && len == lengths[grp]) as usize , 0),
+            memo,
+        );
+    }
+    memo.insert(hash, n);
+    n
 }
