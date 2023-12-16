@@ -3,8 +3,10 @@ mod helper;
 fn main() {
     let blocks = helper::read_input();
     let mut sum = 0;
+    let part_one = false;
+    let diff = if part_one { 0 } else { 1 };
     for mut block in blocks {
-        if let Some(res) = reflection(&mut block){
+        if let Some(res) = reflection(&mut block, diff) {
             sum += res * 100;
         } else {
             let mut transposed = (0..block[0].len())
@@ -15,14 +17,14 @@ fn main() {
                         .collect()
                 })
                 .collect();
-            if let Some(res) = reflection(&mut transposed) {
+            if let Some(res) = reflection(&mut transposed, diff) {
                 sum += res;
             }
         }
     }
     println!("Sum: {}", sum);
 }
-fn reflection(block: &mut Vec<String>) -> Option<i32> {
+fn reflection(block: &mut Vec<String>, diff: i32) -> Option<i32> {
     for idx in 1..block.len() {
         let mut sum = 0;
         for (left, right) in block[..idx].iter().rev().zip(block[idx..].iter()) {
@@ -32,7 +34,7 @@ fn reflection(block: &mut Vec<String>) -> Option<i32> {
                 .filter(|(l, r)| l != r)
                 .count();
         }
-        if sum == 0 {
+        if sum as i32 == diff {
             return Some(idx as i32);
         }
     }
