@@ -9,7 +9,7 @@ enum Direction {
     Up,
 }
 impl Direction {
-    fn new(prev_direction: Direction, state: State) -> Vec<Direction> {
+    fn new(prev_direction: Direction, state: State) -> Vec<Self> {
         match state {
             State::EmptySpace => vec![prev_direction],
             State::HorizontalSplitter => match prev_direction {
@@ -35,7 +35,7 @@ impl Direction {
         }
     }
 }
-#[derive(Clone, Copy, Hash,Eq, PartialEq)]
+#[derive(Clone, Copy, Hash, Eq, PartialEq)]
 enum State {
     BackslashMirror,
     ForwardSlashMirror,
@@ -64,23 +64,48 @@ struct Node {
     next_dir: Vec<Direction>,
 }
 fn main() {
-    let mut grid = helper::read_input();
+    let grid = helper::read_input();
+    println!("Part one: {}", part_one(&grid));
+    println!("Part two: {}", part_two(&grid));
+}
+
+fn part_two(grid: &Vec<Vec<char>>) -> i32 {
+    let mut v = Vec::new();
+    let mut ans = 0;
+    for i in 0..grid.len() {
+        ans = get_result(grid, i, 0, Direction::Right);
+        v.push(ans);
+        ans = get_result(grid, i, grid[0].len() - 1, Direction::Left);
+        v.push(ans);
+    }
+    for j in 0..grid[0].len() {
+        ans = get_result(grid, 0, j, Direction::Down);
+        v.push(ans);
+        ans = get_result(grid, grid.len() - 1, j, Direction::Up);
+        v.push(ans);
+    }
+    v.iter().max().unwrap().to_owned()
+}
+fn part_one(grid: &Vec<Vec<char>>) -> i32 {
+    get_result(grid, 0, 0, Direction::Right)
+}
+fn get_result(grid: &Vec<Vec<char>>, i: usize, j: usize, initial_dir: Direction) -> i32 {
+    let mut result: Vec<Vec<i32>> = vec![vec![0; grid[0].len()]; grid.len()];
     let mut visited: HashSet<Node> = HashSet::new();
-    let current_node_state = State::new(grid[0][0]);
+    let current_node_state = State::new(grid[i][j]);
     let current_node = Node {
         state: current_node_state,
-        x: 0,
-        y: 0,
-        next_dir: Direction::new(Direction::Right, current_node_state),
+        x: i,
+        y: j,
+        next_dir: Direction::new(initial_dir, current_node_state),
     };
-    let mut result: Vec<Vec<i32>> = vec![vec![0; grid[0].len()]; grid.len()];
     visited.insert(current_node.clone());
-    dfs(&mut grid, &mut visited, &current_node, &mut result);
-    println!("{}", result.iter().flatten().map(|e| *e.min(&1)).sum::<i32>());
+    dfs(grid, &mut visited, &current_node, &mut result);
+    result.iter().flatten().map(|e| *e.min(&1)).sum::<i32>()
 }
 
 fn dfs(
-    grid: &mut Vec<Vec<char>>,
+    grid: &Vec<Vec<char>>,
     visited: &mut HashSet<Node>,
     current_node: &Node,
     result: &mut Vec<Vec<i32>>,
@@ -90,10 +115,10 @@ fn dfs(
     if x >= grid.len() || y >= grid[0].len() {
         return;
     }
-    result[x][y] = 1;
+    result[x][y] += 1;
     for dir in &current_node.next_dir {
         let (new_x, new_y) = determine_index(x as i32, y as i32, dir.clone());
-        if new_x < 0 || new_y < 0 || new_x >= grid.len() as i32 || new_y >= grid[0].len() as i32  {
+        if new_x < 0 || new_y < 0 || new_x >= grid.len() as i32 || new_y >= grid[0].len() as i32 {
             continue;
         }
         let new_state = State::new(grid[new_x as usize][new_y as usize]);
@@ -109,8 +134,6 @@ fn dfs(
         visited.insert(new_node.clone());
         dfs(grid, visited, &new_node, result);
     }
-
-
 }
 
 fn determine_index(x: i32, y: i32, direction: Direction) -> (i32, i32) {
