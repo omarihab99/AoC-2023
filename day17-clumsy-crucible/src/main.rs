@@ -11,9 +11,10 @@ struct State {
 }
 fn main() {
     let grid = helper::read_input();
-    println!("{}", part_one(&grid, 1, 3));
+    println!("Part one: {}", get_path(&grid, 1, 3));
+    println!("Part two: {}", get_path(&grid, 4, 10));
 }
-fn part_one(grid: &Matrix<i32>, min: i32, max: i32) -> i32 {
+fn get_path(grid: &Matrix<i32>, min: i32, max: i32) -> i32 {
     let start_state = State {
         position: (0, 0),
         direction: (0, 0),
