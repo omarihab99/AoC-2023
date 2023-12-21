@@ -3,7 +3,7 @@ use std::{
     io::{BufRead, BufReader},
 };
 
-pub(crate) fn read_input() -> Vec<(char, i32)> {
+pub(crate) fn read_input() -> Vec<(char, i64,String)> {
     let file = File::open("src/input.txt").unwrap();
     let reader = BufReader::new(file);
     reader
@@ -13,7 +13,8 @@ pub(crate) fn read_input() -> Vec<(char, i32)> {
             let line = l.split(" ").collect::<Vec<_>>();
             (
                 line[0].chars().next().unwrap(),
-                line[1].parse::<i32>().unwrap(),
+                line[1].parse::<i64>().unwrap(),
+                line[2].to_string(),
             )
         })
         .collect::<Vec<_>>()
@@ -25,8 +26,8 @@ mod tests {
     #[test]
     fn test_read_input() {
         let input = read_input();
-        for (i, j) in input {
-            println!("First Pair: {:?}", (i, j));
+        for (i, j, color) in input {
+            println!("First Pair: {:?}", (i, j, color));
             println!("---------------------");
         }
     }

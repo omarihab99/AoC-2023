@@ -9,18 +9,41 @@ enum Direction {
 
 #[derive(Clone, Copy)]
 struct Point {
-    x: i32,
-    y: i32,
+    x: i64,
+    y: i64,
 }
 struct Dig {
     direction: Direction,
-    distance: i32,
+    distance: i64,
 }
 fn main() {
     let input = helper::read_input();
+    println!("Part one: {}", part_one(&input));
+    println!("Part two: {}", part_two(&input));
+}
+fn part_two(input: &Vec<(char, i64, String)>) -> i64 {
     let digs = input
         .iter()
-        .map(|(direction, distance)| match direction {
+        .map(|(_, _, color)| {
+            let color_numbers = color.replace(['(', ')', '#'], "");
+            let distance = &color_numbers[..5];
+            let distance = i64::from_str_radix(distance, 16).unwrap();
+            let direction = &color_numbers.chars().nth(5).unwrap();
+            match direction {
+                '0' => Dig{direction:Direction::Right, distance},
+                '1' => Dig{direction:Direction::Down, distance},
+                '2' => Dig{direction:Direction::Left, distance},
+                '3' => Dig{direction:Direction::Up, distance},
+                _ => panic!("Invalid direction"),
+            }
+        })
+        .collect::<Vec<_>>();
+    get_area(&digs)
+}
+fn part_one(input: &Vec<(char, i64, String)>) -> i64 {
+    let digs = input
+        .iter()
+        .map(|(direction, distance, _)| match direction {
             'R' => Dig {
                 direction: Direction::Right,
                 distance: *distance,
@@ -40,6 +63,10 @@ fn main() {
             _ => panic!("Invalid direction"),
         })
         .collect::<Vec<_>>();
+    get_area(&digs)
+}
+
+fn get_area(digs: &Vec<Dig>) -> i64 {
     let mut current_point = Point { x: 0, y: 0 };
     let mut edges: Vec<Point> = vec![current_point];
     let mut total = 0;
@@ -59,7 +86,7 @@ fn main() {
         .fold(0, |acc, (point1, point2)| {
             acc + (point1.x * point2.y) - (point1.y * point2.x)
         });
-    println!("Part one: {}", (total + area) / 2 + 1);
+    (total + area) / 2 + 1
 }
 
 // 1- start from initial point (0,0)
