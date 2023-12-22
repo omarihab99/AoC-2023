@@ -30,21 +30,19 @@ pub(crate) fn read_input() -> (HashMap<String, Vec<Rule>>, Vec<Part>) {
 }
 fn parse_parts(line: String) -> Part {
     let binding = line.replace(['{', '}'], "");
-    let line = binding
-        .split(",")
-        .collect::<Vec<&str>>();
+    let line = binding.split(",").collect::<Vec<&str>>();
     Part {
         x: line[0].split("=").collect::<Vec<&str>>()[1]
-            .parse::<u32>()
+            .parse::<u64>()
             .unwrap(),
         m: line[1].split("=").collect::<Vec<&str>>()[1]
-            .parse::<u32>()
+            .parse::<u64>()
             .unwrap(),
         a: line[2].split("=").collect::<Vec<&str>>()[1]
-            .parse::<u32>()
+            .parse::<u64>()
             .unwrap(),
         s: line[3].split("=").collect::<Vec<&str>>()[1]
-            .parse::<u32>()
+            .parse::<u64>()
             .unwrap(),
     }
 }
@@ -66,7 +64,9 @@ fn parse_workflow(line: String, workflow_map: &mut HashMap<String, Vec<Rule>>) {
             let destination = rule[1];
             let operand1 = rule[0].chars().nth(0).unwrap();
             let operator = rule[0].chars().nth(1).unwrap();
-            let operand2 = rule[0].split(operator).collect::<Vec<&str>>()[1].parse::<u32>().unwrap();
+            let operand2 = rule[0].split(operator).collect::<Vec<&str>>()[1]
+                .parse::<u64>()
+                .unwrap();
             let condition = Condition {
                 operand1,
                 operand2,
